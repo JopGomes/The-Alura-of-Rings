@@ -35,7 +35,6 @@ function Titulo(props) {
 export default function PaginaInicial() {
   const [username, setUsername] = React.useState('')
   const roteamento = useRouter()
-  console.log(username.length)
   return (
     <>
       <Box
@@ -66,13 +65,17 @@ export default function PaginaInicial() {
             as="form"
             onSubmit={function (infosDoEvento) {
               infosDoEvento.preventDefault();
-              console.log('Alguém submeteu o form');
               //  Levando Para o easterEgg
-              if(username.toLowerCase() === 'amigo'){
+              if (username.toLowerCase() === 'amigo') {
                 roteamento.push('/easterEgg');
               }
-              else {roteamento.push('/chat');}
-              // window.location.href = '/chat';
+              else {
+                roteamento.push({
+                  pathname: '/chat',
+                  // window.location.href = '/chat';
+                  query: { username: username }
+                });
+              }
             }}
             styleSheet={{
               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
@@ -88,7 +91,6 @@ export default function PaginaInicial() {
               fullWidth
               value={username}
               onChange={function (event) {
-                console.log('usuario digitou', event.target.value);
                 // Onde ta o valor?
                 const valor = event.target.value;
                 // Trocar o valor da variavel
@@ -136,46 +138,46 @@ export default function PaginaInicial() {
             }}
           >
             {
-              username.length > 2?<>
-              {
-                // Easter egg 1
-                username.toLowerCase() ===  'amigo'?
-                <Image
+              username.length > 2 ? <>
+                {
+                  // Easter egg 1
+                  username.toLowerCase() === 'amigo' ?
+                    <Image
+                      styleSheet={{
+                        borderRadius: '50%',
+                        marginBottom: '16px',
+                      }}
+                      src={`https://i.pinimg.com/originals/a8/67/4d/a8674df0890c581f1891b3b2b134c765.jpg`}
+                    /> :
+                    <Image
+                      styleSheet={{
+                        borderRadius: '50%',
+                        marginBottom: '16px',
+                      }}
+                      src={`https://github.com/${username}.png`}
+                    />
+                }
+                <Text
+                  variant="body4"
                   styleSheet={{
-                    borderRadius: '50%',
-                    marginBottom: '16px',
+                    color: appConfig.theme.colors.neutrals[200],
+                    backgroundColor: appConfig.theme.colors.neutrals[900],
+                    padding: '3px 10px',
+                    borderRadius: '1000px'
                   }}
-                  src={`https://i.pinimg.com/originals/a8/67/4d/a8674df0890c581f1891b3b2b134c765.jpg`}
-                />:
-                <Image
+                >
+                  {username}
+                </Text>
+              </>
+                : <Text
+                  variant="body4"
                   styleSheet={{
-                    borderRadius: '50%',
-                    marginBottom: '16px',
+                    color: appConfig.theme.colors.neutrals[200],
+                    backgroundColor: appConfig.theme.colors.neutrals[900],
+                    padding: '3px 10px',
+                    borderRadius: '1000px'
                   }}
-                  src={`https://github.com/${username}.png`}
-                />
-              }
-              <Text
-              variant="body4"
-              styleSheet={{
-                color: appConfig.theme.colors.neutrals[200],
-                backgroundColor: appConfig.theme.colors.neutrals[900],
-                padding: '3px 10px',
-                borderRadius: '1000px'
-              }}
-            >
-              {username}
-            </Text>
-            </>
-              : <Text
-              variant="body4"
-              styleSheet={{
-                color: appConfig.theme.colors.neutrals[200],
-                backgroundColor: appConfig.theme.colors.neutrals[900],
-                padding: '3px 10px',
-                borderRadius: '1000px'
-              }}
-            >Digite o nome do usuario</Text>
+                >Digite o nome do usuario</Text>
             }
           </Box>
           {/* Photo Area */}

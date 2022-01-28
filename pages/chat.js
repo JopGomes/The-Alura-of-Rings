@@ -2,58 +2,87 @@ import { Box, Text, TextField, Image, Button } from '@skynexui/components';
 import { createClient } from '@supabase/supabase-js'
 import React from 'react';
 import appConfig from '../config.json';
+import { useRouter } from 'next/router';
+import Popover from "@material-ui/core/Popover";
+import { makeStyles } from "@material-ui/core/styles";
+import { Preloader, Oval } from 'react-preloader-icon';
+
+import GitUser from './gitInfo'
 
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlhdCI6MTY0MzMxMTYxMCwiZXhwIjoxOTU4ODg3NjEwfQ.ulYq6EyQLPuh1XPRcwM-Bfi7rs1udA_1ZlNo-NUXLX8'
 
 const SUPABASE_URL = 'https://rilsuobwcbmeqwkpmwan.supabase.co'
 const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
 
+const useStyles = makeStyles(theme => ({
+    popover: {
+        pointerEvents: "none"
+    },
+    paper: {
+        padding: theme.spacing(3)
+    }
+}));
 
 export default function ChatPage() {
     // Sua lógica vai aqui
-      // Usuario digita no campo
-      // Usuario aperta para enviar
-      // Tem que adicionar o texto na listagem
+    // Usuario digita no campo
+    // Usuario aperta para enviar
+    // Tem que adicionar o texto na listagem
 
-      // DEV :
-         // {X} Campo criado
-         // {X} Vamos usar o onChange usa o useState ( ter if caso seja enter para enviar)
-         // Lista de mensagem
-    // ./Sua lógica vai aqui
+    // DEV :
+    // {X} Campo criado
+    // {X} Vamos usar o onChange usa o useState ( ter if caso seja enter para enviar)
+    // Lista de mensagem
+
     const [mensagem, setMensagem] = React.useState('');
     const [listaDeMensagens, setListaDeMensagens] = React.useState([]);
-    React.useEffect(() => {
-    supabaseClient
-      .from('mensagem')
-      .select('*')
-      .order('id', { ascending: false })
-      .then(({ data }) => {
-        console.log('Dados da consulta:', data);
-        setListaDeMensagens(data);
-      });
-  }, []);
- function handleNovaMensagem(novaMensagem) {
-    const mensagem = {
-      // id: listaDeMensagens.length + 1,
-      de: 'JosephVieira',
-      texto: novaMensagem,
-    };
+    const [loading,setLoading]=React.useState(true)
 
-    supabaseClient
-      .from('mensagem')
-      .insert([
-        // Tem que ser um objeto com os MESMOS CAMPOS que você escreveu no supabase
-        mensagem
-      ])
-      .then(({ data }) => {
-        console.log('Criando mensagem: ', data);
-        setListaDeMensagens([
-            data[0],
-            ...listaDeMensagens,
-        ]);
-      });
+    const router = useRouter()
+    React.useEffect(() => {
+        supabaseClient
+            .from('mensagem')
+            .select('*')
+            .order('id', { ascending: false })
+            .then(({ data }) => {
+                setListaDeMensagens(data);
+            });
+    }, []);
+    function handleNovaMensagem(novaMensagem) {
+        const mensagem = {
+            // id: listaDeMensagens.length + 1,
+            de: router.query.username,
+            texto: novaMensagem,
+        };
+        supabaseClient
+            .from('mensagem')
+            .insert([
+                // Tem que ser um objeto com os MESMOS CAMPOS que você escreveu no supabase
+                mensagem
+            ])
+            .then(({ data }) => {
+                //Se não da bug
+                setListaDeMensagens([
+                    data[0],
+                    ...listaDeMensagens,
+                ]);
+            });
         setMensagem('');
     }
+    React.useEffect(() => {
+        supabaseClient
+          .from('mensagens')
+          .select('*')
+          .order('created_at',{ascending:false})
+          .then(({ data }) => {
+            //console.log('Dados da consulta:', data);
+            if(data!=null){
+                setListaDeMensagens(data);
+            }
+
+            setLoading(false)
+          });
+        }, []);
     return (
         <Box
             styleSheet={{
@@ -64,7 +93,18 @@ export default function ChatPage() {
             }}
         >
             <Box
-                styleSheet={{
+                styleSheet={loading?{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    flex: 1,
+                    boxShadow: '0 2px 10px 0 rgb(0 0 0 / 20%)',
+                    borderRadius: '5px',
+                    backgroundColor: '#010101',
+                    height: '80%',
+                    maxWidth: '75%',
+                    maxHeight: '95vh',
+                    padding: '32px',
+                    }:{
                     display: 'flex',
                     flexDirection: 'column',
                     flex: 1,
@@ -79,7 +119,16 @@ export default function ChatPage() {
             >
                 <Header />
                 <Box
-                    styleSheet={{
+                    styleSheet={loading?{
+                        position: 'relative',
+                        display: 'flex',
+                        flex: 1,
+                        height: '80%',
+                        backgroundColor: '#010101',
+                        flexDirection: 'column',
+                        borderRadius: '5px',
+                        padding: '16px',
+                    }:{
                         position: 'relative',
                         display: 'flex',
                         flex: 1,
@@ -90,8 +139,27 @@ export default function ChatPage() {
                         padding: '16px',
                     }}
                 >
-                    <MessageList mensagens={listaDeMensagens} setMensagem= {setListaDeMensagens} />
-                    
+                    {
+                        loading? <Box
+                        styleSheet={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent:'center'
+                        }}>
+                        <Image
+                                styleSheet={{
+                                    width: '500px',
+                                    height: '300px',
+                                    display: 'cover',
+                                    marginRight: '8px',
+                                    marginBottom:'100px'
+                                }}
+                                src={`https://i.ytimg.com/vi/1jUqzFMo0kk/maxresdefault.jpg`}
+                            />
+                        </Box>
+                        :<MessageList mensagens={listaDeMensagens} setMensagem={setListaDeMensagens} />
+                    }
+
                     <Box
                         as="form"
                         styleSheet={{
@@ -144,9 +212,9 @@ export default function ChatPage() {
                         />
                     </Box>
                 </Box>
-            </Box>            
+            </Box>
         </Box>
-        
+
     )
 }
 
@@ -169,16 +237,32 @@ function Header() {
 }
 
 function MessageList(props) {
-    console.log(props);
+    // Constantes do Popover
+    const [anchorEl, setAnchorEl] = React.useState(null);
+    const [perfil, setPerfil] = React.useState('')
+
+    const handlePopoverClose = () => {
+        setAnchorEl(null);
+    };
+    const classes = useStyles()
+
     // Função para deletar a mensagem
-    const delMensage = (mensagem) =>{
+    const delMensage = async (mensagem) => {
+        await supabaseClient
+            .from('mensagem')
+            .delete()
+            .match({ id: mensagem.id })
+
         // Filtrando para encontrar a mensagem certa
-        let newLista = props.mensagens.filter((elemento) =>{
-            return mensagem.id !== elemento.id
+        let newLista = props.mensagens.filter((elementoDeMensagem) => {
+            return mensagem.id !== elementoDeMensagem.id
         })
         //Definindo a nova lista
         props.setMensagem(newLista)
     }
+    //Constante para recarregamento
+    const [vazio, setVazio] = React.useState('')
+
     return (
         <Box
             tag="ul"
@@ -192,6 +276,14 @@ function MessageList(props) {
             }}
         >
             {props.mensagens.map((mensagem) => {
+                const handlePopoverOpen = (event) => {
+                    if (mensagem.de === event.currentTarget.src.slice(19, -4)) {
+                        setAnchorEl(event.currentTarget);
+                        setPerfil(event.currentTarget.src.slice(19, -4))
+                        console.log(mensagem.de, '1', event.currentTarget.src.slice(19, -4))
+                    }
+                };
+                const open = Boolean(anchorEl);
                 return (
                     <Text
                         key={mensagem.id}
@@ -216,8 +308,8 @@ function MessageList(props) {
                                     delMensage(mensagem)
                                 }}
                                 styleSheet={{
-                                    backgroundImage: 'url(https://www.netclipart.com/pp/m/210-2105805_red-crossed-swords-png.png)', 
-                                    backgroundRepeat: 'no-repeat',  
+                                    backgroundImage: 'url(https://www.netclipart.com/pp/m/210-2105805_red-crossed-swords-png.png)',
+                                    backgroundRepeat: 'no-repeat',
                                     backgroundSize: 'cover',
                                     marginLeft: '95%',
                                     backgroundColor: appConfig.theme.colors.neutrals[600],
@@ -232,10 +324,12 @@ function MessageList(props) {
                                     marginRight: '8px',
                                 }}
                                 src={`https://github.com/${mensagem.de}.png`}
+                                onMouseEnter={handlePopoverOpen}
+                                onMouseLeave={handlePopoverClose}
+
                             />
-                            <Text tag="strong">
-                                {mensagem.de}
-                            </Text>
+                            {/* // -----------Ver o porque não está funcionando o href  */}
+                            <Text tag='a' href={`https://github.com/${mensagem.de}`}>{mensagem.de}</Text>
                             <Text
                                 styleSheet={{
                                     fontSize: '10px',
@@ -246,9 +340,32 @@ function MessageList(props) {
                             >
                                 {(new Date().toLocaleDateString())}
                             </Text>
-                            
+
                         </Box>
                         {mensagem.texto}
+
+                        <Popover
+                            id="mouse-over-popover"
+                            className={classes.popover}
+                            classes={{
+                                paper: classes.paper
+                            }}
+                            open={open}
+                            anchorEl={anchorEl}
+                            anchorOrigin={{
+                                vertical: "bottom",
+                                horizontal: "left"
+                            }}
+                            transformOrigin={{
+                                vertical: "top",
+                                horizontal: "left"
+                            }}
+                            onClose={handlePopoverClose}
+                            disableRestoreFocus
+
+                        >
+                            <GitUser username={perfil} Close={handlePopoverClose} />
+                        </Popover>
                     </Text>
                 );
             })}
