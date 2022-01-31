@@ -9,7 +9,7 @@ import { Preloader, Oval } from 'react-preloader-icon';
 
 import GitUser from './gitInfo'
 
-import {ButtonSendSticker} from '../components/ButtonSendSticker'
+import ButtonSendSticker from '../components/ButtonSendSticker'
 
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlhdCI6MTY0MzMxMTYxMCwiZXhwIjoxOTU4ODg3NjEwfQ.ulYq6EyQLPuh1XPRcwM-Bfi7rs1udA_1ZlNo-NUXLX8'
 
