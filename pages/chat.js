@@ -9,6 +9,8 @@ import { Preloader, Oval } from 'react-preloader-icon';
 
 import GitUser from './gitInfo'
 
+import {ButtonSendSticker} from './components/ButtonSendSticker'
+
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlhdCI6MTY0MzMxMTYxMCwiZXhwIjoxOTU4ODg3NjEwfQ.ulYq6EyQLPuh1XPRcwM-Bfi7rs1udA_1ZlNo-NUXLX8'
 
 const SUPABASE_URL = 'https://rilsuobwcbmeqwkpmwan.supabase.co'
@@ -23,6 +25,15 @@ const useStyles = makeStyles(theme => ({
     }
 }));
 
+function RealTimeMsg(novaMensagem){
+    return supabaseClient
+    .from('mensagem')
+    .on('INSERT', (respostaAutomatica)=>{
+        novaMensagem(respostaAutomatica.new)
+        console.log('escutado')
+    })
+    .subscribe();
+}
 export default function ChatPage() {
     // Sua lógica vai aqui
     // Usuario digita no campo
@@ -37,7 +48,6 @@ export default function ChatPage() {
     const [mensagem, setMensagem] = React.useState('');
     const [listaDeMensagens, setListaDeMensagens] = React.useState([]);
     const [loading,setLoading]=React.useState(true)
-
     const router = useRouter()
     React.useEffect(() => {
         supabaseClient
@@ -45,8 +55,22 @@ export default function ChatPage() {
             .select('*')
             .order('id', { ascending: false })
             .then(({ data }) => {
+                console.log(data)
                 setListaDeMensagens(data);
             });
+        const subscription = RealTimeMsg((novaMensagem)=>{
+            // handleNovaMensagem(novaMensagem)
+            setListaDeMensagens((valorAtualDaLista)=>{
+                return [                       
+                    novaMensagem,
+                    ...valorAtualDaLista,
+                ]
+            });
+        });
+
+        return () => {
+            subscription.unsubscribe()
+        }
     }, []);
     function handleNovaMensagem(novaMensagem) {
         const mensagem = {
@@ -62,10 +86,10 @@ export default function ChatPage() {
             ])
             .then(({ data }) => {
                 //Se não da bug
-                setListaDeMensagens([
-                    data[0],
-                    ...listaDeMensagens,
-                ]);
+                // setListaDeMensagens([
+                //     data[0],
+                //     ...listaDeMensagens,
+                // ]);
             });
         setMensagem('');
     }
@@ -196,6 +220,12 @@ export default function ChatPage() {
                                 color: appConfig.theme.colors.neutrals[200],
                             }}
                         />
+                        <ButtonSendSticker 
+                            onStickerClick={(sticker)=>{
+                                console.log(sticker)
+                                handleNovaMensagem(':sticker:'+sticker);
+                            }}
+                        />
                         <Button
                             type='submit'
                             label='Enviar'
@@ -237,6 +267,7 @@ function Header() {
 }
 
 function MessageList(props) {
+    const router = useRouter()
     // Constantes do Popover
     const [anchorEl, setAnchorEl] = React.useState(null);
     const [perfil, setPerfil] = React.useState('')
@@ -302,10 +333,11 @@ function MessageList(props) {
                                 marginBottom: '8px',
                             }}
                         >
-                            <Button
+                           {router.query.username === mensagem.de? <Button
                                 onClick={() => {
                                     // Função para deletar as mensagens no clique
-                                    delMensage(mensagem)
+                                        delMensage(mensagem)
+                                    
                                 }}
                                 styleSheet={{
                                     backgroundImage: 'url(https://www.netclipart.com/pp/m/210-2105805_red-crossed-swords-png.png)',
@@ -314,7 +346,7 @@ function MessageList(props) {
                                     marginLeft: '95%',
                                     backgroundColor: appConfig.theme.colors.neutrals[600],
                                 }}
-                            />
+                            />: null}
                             <Image
                                 styleSheet={{
                                     width: '20px',
@@ -342,8 +374,12 @@ function MessageList(props) {
                             </Text>
 
                         </Box>
-                        {mensagem.texto}
-
+                        {mensagem.texto.startsWith(':sticker:')?
+                        <Image src={mensagem.texto.replace(':sticker:','')} styleSheet={{
+                            maxWidth:'150px'
+                            }} />
+                        :mensagem.texto
+                        }
                         <Popover
                             id="mouse-over-popover"
                             className={classes.popover}
