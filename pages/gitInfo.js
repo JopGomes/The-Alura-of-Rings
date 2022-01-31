@@ -6,7 +6,6 @@ import appConfig from '../config.json';
 
 export default function GitUserPage(data) {
     const [userData, setUserData] = React.useState({});
-    const router = useRouter()
     let username = data.username
     React.useEffect(() => {
         getUserData();
@@ -63,7 +62,6 @@ export default function GitUserPage(data) {
                             borderRadius: '1000px'
                         }}
                     >
-
                         {userData.login}
                     </Text>
 
@@ -90,8 +88,6 @@ export default function GitUserPage(data) {
                         <br />
                         Seguindo: {userData.following}
                     </Text>
-
-
                 </Box>
             </Box>
         </>
